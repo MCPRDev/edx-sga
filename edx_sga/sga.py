@@ -595,16 +595,17 @@ class StaffGradedAssignmentXBlock(
             context["is_course_staff"] = True
             self.update_staff_debug_context(context)
 
+        i18n_service = self._get_i18n_service()
         fragment = Fragment()
         fragment.add_content(
             render_template(
                 "templates/staff_graded_assignment/show.html",
                 context,
-                i18n_service=self.i18n_service,
+                i18n_service=i18n_service,
             )
         )
         fragment.add_css(_resource("static/css/edx_sga.css"))
-        static_i18n_js_url = self._get_statici18n_js_url()
+        static_i18n_js_url = self._get_statici18n_js_url(i18n_service)
         if static_i18n_js_url:
             fragment.add_javascript_url(static_i18n_js_url)
         fragment.add_javascript(_resource("static/js/src/edx_sga.js"))
@@ -619,10 +620,14 @@ class StaffGradedAssignmentXBlock(
         # this method only exists to provide context=None for backwards compat
         return super().studio_view(context)
 
-    def _get_statici18n_js_url(self):
+    def _get_i18n_service(self):
+        """Return the i18n service supplied by the XBlock runtime."""
+        return self.runtime.service(self, "i18n")
+
+    def _get_statici18n_js_url(self, i18n_service):
         """Return the JavaScript catalogue served by the XBlock i18n service."""
         url_getter = getattr(
-            self.i18n_service, "get_javascript_i18n_catalog_url", None
+            i18n_service, "get_javascript_i18n_catalog_url", None
         )
         if url_getter:
             return url_getter(self)
