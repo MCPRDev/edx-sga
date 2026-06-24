@@ -154,6 +154,47 @@ class StaffGradedAssignmentMockedTests(TempfileMixin):
         block.start = datetime.datetime(2010, 5, 12, 2, 42, tzinfo=pytz.utc)
         return block
 
+    @mock.patch("edx_sga.sga.loader.render_django_template")
+    def test_render_template_uses_xblock_i18n_service(self, render_django_template):
+        """Templates must be rendered through ResourceLoader for Atlas i18n."""
+        from edx_sga.sga import render_template  # pylint: disable=import-outside-toplevel
+
+        context = {"value": "example"}
+        i18n_service = mock.Mock()
+        render_template(
+            "templates/staff_graded_assignment/show.html",
+            context,
+            i18n_service=i18n_service,
+        )
+
+        render_django_template.assert_called_once_with(
+            "templates/staff_graded_assignment/show.html",
+            context=context,
+            i18n_service=i18n_service,
+        )
+
+    def test_i18n_service_is_requested_from_runtime(self):
+        """The i18n requirement does not inject an i18n_service attribute."""
+        block = self.make_xblock()
+        i18n_service = mock.Mock()
+        block.runtime.service = mock.Mock(return_value=i18n_service)
+
+        assert block._get_i18n_service() is i18n_service
+        block.runtime.service.assert_called_once_with(block, "i18n")
+
+    def test_static_i18n_catalog_uses_runtime_service(self):
+        """The JavaScript catalogue is obtained from the runtime i18n service."""
+        block = self.make_xblock()
+        i18n_service = mock.Mock()
+        i18n_service.get_javascript_i18n_catalog_url.return_value = "/i18n/es_419.js"
+        block.runtime.service = mock.Mock(return_value=i18n_service)
+
+        assert (
+            block._get_statici18n_js_url(block._get_i18n_service())
+            == "/i18n/es_419.js"
+        )
+        i18n_service.get_javascript_i18n_catalog_url.assert_called_once_with(block)
+
     def test_ctor(self):
         """
         Test points are set correctly.
