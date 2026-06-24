@@ -154,6 +154,25 @@ class StaffGradedAssignmentMockedTests(TempfileMixin):
         block.start = datetime.datetime(2010, 5, 12, 2, 42, tzinfo=pytz.utc)
         return block
 
+    @mock.patch("edx_sga.sga.loader.render_django_template")
+    def test_render_template_uses_xblock_i18n_service(self, render_django_template):
+        """Templates must be rendered through ResourceLoader for Atlas i18n."""
+        from edx_sga.sga import render_template  # pylint: disable=import-outside-toplevel
+
+        context = {"value": "example"}
+        i18n_service = mock.Mock()
+        render_template(
+            "templates/staff_graded_assignment/show.html",
+            context,
+            i18n_service=i18n_service,
+        )
+
+        render_django_template.assert_called_once_with(
+            "templates/staff_graded_assignment/show.html",
+            context=context,
+            i18n_service=i18n_service,
+        )
+
     def test_ctor(self):
         """
         Test points are set correctly.
