@@ -104,8 +104,7 @@ msgid "No file has been uploaded."
 msgstr ""
 
 #: edx_sga/templates/staff_graded_assignment/show.html
-#, python-format
-msgid "Your score is %(graded_score)s / %(max_score)s"
+msgid "Your score is"
 msgstr ""
 
 #: edx_sga/templates/staff_graded_assignment/show.html
@@ -213,8 +212,7 @@ msgid "Enter Grade"
 msgstr ""
 
 #: edx_sga/templates/staff_graded_assignment/show.html
-#, python-format
-msgid "Grade for %(student_name)s"
+msgid "Grade for"
 msgstr ""
 
 #: edx_sga/templates/staff_graded_assignment/show.html

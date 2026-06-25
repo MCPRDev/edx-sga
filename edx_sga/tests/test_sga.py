@@ -8,6 +8,7 @@ import json
 import mimetypes
 import os
 import uuid
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -172,6 +173,28 @@ class StaffGradedAssignmentMockedTests(TempfileMixin):
             context=context,
             i18n_service=i18n_service,
         )
+
+    def test_student_template_marks_static_text_for_translation(self):
+        """Student-facing Underscore template text must remain translatable."""
+        template_path = (
+            Path(__file__).resolve().parents[1]
+            / "templates"
+            / "staff_graded_assignment"
+            / "show.html"
+        )
+        template = template_path.read_text(encoding="utf-8")
+
+        assert '<a class="button finalize-upload">{% trans "Submit" %}</a>' in template
+        assert '{% trans "Your score is" %} <%= graded.score %> / <%= max_score %>' in template
+        assert '{% trans "Grade for" %} <span id="student-name"></span>' in template
+
+    def test_grade_modal_falls_back_to_username_when_full_name_is_empty(self):
+        """The grade modal must show an identifier even when profile.name is empty."""
+        js_path = Path(__file__).resolve().parents[1] / "static" / "js" / "src" / "edx_sga.js"
+        script = js_path.read_text(encoding="utf-8")
+
+        assert "var studentName = row.data('fullname') || row.data('username') || '';" in script
+        assert "$(element).find('#student-name').text(studentName);" in script
 
     def test_i18n_service_is_requested_from_runtime(self):
         """The i18n requirement does not inject an i18n_service attribute."""
