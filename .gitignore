@@ -18,6 +18,3 @@ build/
 !django.mo
 !djangojs.po
 !djangojs.mo
-
-docs/
-README.md

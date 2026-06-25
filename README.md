@@ -323,6 +323,10 @@ pulls and compiles these files from `openedx-translations` while building the
 `openedx` image; this repository's Makefile is for local extraction and
 validation.
 
+For the complete architecture, implementation details, Tutor procedure, and
+diagnostic guide, see [Internationalization with Atlas and Tutor](docs/atlas-i18n.md).
+For the per-change documentation, see the [docs index](docs/README.md).
+
 ## Testing
 
 Assuming `edx-sga` is installed as above, integration tests can be run in devstack with this command:
