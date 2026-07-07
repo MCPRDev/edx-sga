@@ -19,3 +19,5 @@ build/
 !djangojs.po
 !djangojs.mo
 
+docs/
+README.md
