@@ -16,6 +16,7 @@ import pytz
 from ddt import data, ddt, unpack
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.utils import translation
 from django.utils.timezone import now as django_now
 from opaque_keys.edx.locations import Location
 from opaque_keys.edx.locator import CourseLocator
@@ -174,7 +175,24 @@ class StaffGradedAssignmentMockedTests(TempfileMixin):
             i18n_service=i18n_service,
         )
 
-    def test_student_template_marks_static_text_for_translation(self):
+    def test_show_template_renders_translatable_markup_end_to_end(self):
+        """Render show.html through ResourceLoader and the Django template engine."""
+        from edx_sga.sga import render_template  # pylint: disable=import-outside-toplevel
+
+        with translation.override("en"):
+            rendered = render_template(
+                "templates/staff_graded_assignment/show.html",
+                {"is_course_staff": True},
+                i18n_service=None,
+            )
+
+        assert "Your score is <%= graded.score %> / <%= max_score %>" in rendered
+        assert 'Grade for <span id="student-name"></span>' in rendered
+        assert '<a class="button finalize-upload">Submit</a>' in rendered
+        assert "&lt;%" not in rendered
+        assert "&lt;span" not in rendered
+
+    def test_student_template_uses_blocktrans_placeholders(self):
         """Student-facing Underscore template text must remain translatable."""
         template_path = (
             Path(__file__).resolve().parents[1]
@@ -185,8 +203,17 @@ class StaffGradedAssignmentMockedTests(TempfileMixin):
         template = template_path.read_text(encoding="utf-8")
 
         assert '<a class="button finalize-upload">{% trans "Submit" %}</a>' in template
-        assert '{% trans "Your score is" %} <%= graded.score %> / <%= max_score %>' in template
-        assert '{% trans "Grade for" %} <span id="student-name"></span>' in template
+        assert (
+            '{% blocktrans with score="<%= graded.score %>"|safe '
+            'max_score="<%= max_score %>"|safe %}'
+            'Your score is {{ score }} / {{ max_score }}'
+            '{% endblocktrans %}'
+        ) in template
+        assert (
+            "{% blocktrans with student_name='<span id=\"student-name\"></span>'|safe %}"
+            "Grade for {{ student_name }}"
+            "{% endblocktrans %}"
+        ) in template
 
     def test_grade_modal_falls_back_to_username_when_full_name_is_empty(self):
         """The grade modal must show an identifier even when profile.name is empty."""
@@ -202,7 +229,11 @@ class StaffGradedAssignmentMockedTests(TempfileMixin):
         i18n_service = mock.Mock()
         block.runtime.service = mock.Mock(return_value=i18n_service)
 
-        assert block._get_i18n_service() is i18n_service
+        runtime_i18n_service = (
+            block._get_i18n_service()  # pylint: disable=protected-access
+        )
+
+        assert runtime_i18n_service is i18n_service
         block.runtime.service.assert_called_once_with(block, "i18n")
 
     def test_static_i18n_catalog_uses_runtime_service(self):
@@ -212,10 +243,14 @@ class StaffGradedAssignmentMockedTests(TempfileMixin):
         i18n_service.get_javascript_i18n_catalog_url.return_value = "/i18n/es_419.js"
         block.runtime.service = mock.Mock(return_value=i18n_service)
 
-        assert (
-            block._get_statici18n_js_url(block._get_i18n_service())
-            == "/i18n/es_419.js"
+        runtime_i18n_service = (
+            block._get_i18n_service()  # pylint: disable=protected-access
         )
+        catalog_url = block._get_statici18n_js_url(  # pylint: disable=protected-access
+            runtime_i18n_service
+        )
+
+        assert catalog_url == "/i18n/es_419.js"
         i18n_service.get_javascript_i18n_catalog_url.assert_called_once_with(block)
 
     def test_ctor(self):

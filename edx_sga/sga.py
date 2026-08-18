@@ -34,7 +34,7 @@ from xblock.exceptions import JsonHandlerError
 from xblock.fields import DateTime, Float, Integer, Scope, String
 try:
     from xblock.utils.resources import ResourceLoader
-except ModuleNotFoundError:  # pragma: no cover - compatibility with older XBlock releases
+except ImportError:  # pragma: no cover - compatibility with older XBlock releases
     from xblockutils.resources import ResourceLoader
 from web_fragments.fragment import Fragment
 from xblock.utils.studio_editable import StudioEditableXBlockMixin
@@ -1071,7 +1071,7 @@ def _resource(path):  # pragma: NO COVER
     return data.decode("utf8")
 
 
-def render_template(template_path, context=None, i18n_service=None):  # pragma: NO COVER
+def render_template(template_path, context=None, i18n_service=None):
     """
     Render a packaged Django template with the XBlock's i18n service.
 
