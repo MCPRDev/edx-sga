@@ -208,7 +208,7 @@ class StaffGradedAssignmentMockedTests(TempfileMixin):
 
         assert "Submitted" in rendered
         assert "Your score is <%= graded.score %> / <%= max_score %>" not in rendered
-        assert "Instructor comment" in rendered
+        assert "<b>Instructor comment:</b> <%= graded.comment %>" in rendered
         assert "Annotated file from instructor" in rendered
         assert "<%= graded.comment %>" in rendered
         assert "<%= annotated.filename %>" in rendered
@@ -236,6 +236,10 @@ class StaffGradedAssignmentMockedTests(TempfileMixin):
             "{% blocktrans with student_name='<span id=\"student-name\"></span>'|safe %}"
             "Grade for {{ student_name }}"
             "{% endblocktrans %}"
+        ) in template
+        assert (
+            '<b>{% trans "Instructor comment:" %}</b> '
+            '<%= graded.comment %><br/>'
         ) in template
 
     def test_grade_modal_falls_back_to_username_when_full_name_is_empty(self):
